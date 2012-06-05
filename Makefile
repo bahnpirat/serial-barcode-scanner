@@ -1,7 +1,7 @@
 PREFIX=/usr/local
 
 # web.vala (currently disabled)
-barcode-scanner: main.vala device.vala db.vala
+barcode-scanner: main.vala device.vala db.vala web.vala
 	valac-0.16 --output $@ --pkg posix --pkg linux --pkg libsoup-2.4 --pkg sqlite3 $^
 
 shop.db: create_db.sql
