@@ -1,5 +1,6 @@
 public Device dev;
 public Database db;
+public Web web;
 
 public static int main(string[] args) {
 	if(args.length < 2) {
@@ -9,6 +10,7 @@ public static int main(string[] args) {
 
 	dev = new Device(args[1], 9600, 8, 1);
 	db = new Database("shop.db");
+	web = new Web(8080);
 
 	dev.received_barcode.connect((data) => {
 		if(interpret(data))
