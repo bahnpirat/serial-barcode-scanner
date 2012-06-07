@@ -1,3 +1,4 @@
 barcode-scanner
+*.c
 *.swp
 shop.db
