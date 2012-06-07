@@ -3,8 +3,8 @@ PREFIX=/usr/local
 VALA_SRC = $(wildcard *.vala)
 C_SRC = $(wildcard *.c)
 
-barcode-scanner: $(VALA_SRC)
-	valac-0.16 --output=$@ --pkg posix --pkg linux --pkg libsoup-2.4 --pkg sqlite3 $^
+barcode-scanner: main.vala datatypes.vala session.vala device.vala db.vala web.vala
+	valac-0.16 --output=$@ --pkg posix --pkg linux --pkg libsoup-2.4 --pkg json-glib-1.0 --pkg sqlite3 $^
 
 #barcode-scanner: vala
 #	clang -o $@ $(C_SRC) `pkg-config --cflags --libs libsoup-2.4 sqlite3`

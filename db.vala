@@ -12,6 +12,7 @@ public class DatabaseHelper {
 	private Statement undo_stmt3;
 	private Statement stock_stmt1;
 	private Statement stock_stmt2;
+	private Statement list_stmt;
 	private static string user_query = "SELECT id FROM users WHERE id = ? LIMIT 1";
 	private static string imei_query = "SELECT id FROM users WHERE imei = ? LIMIT 1";
 	private static string product_query = "SELECT name FROM products WHERE id = ?";
@@ -22,6 +23,7 @@ public class DatabaseHelper {
 	private static string undo_query3 = "UPDATE products SET amount = amount + 1 WHERE id = ?";
 	private static string stock_query1 = "INSERT INTO restock ('user', 'product', 'amount', 'timestamp') VALUES (?, ?, ?, ?)";
 	private static string stock_query2 = "UPDATE products SET amount = amount + ? WHERE id = ?";
+	private static string list_query = "SELECT user, product, timestamp FROM purchases WHERE timestamp >= ? AND timestamp <= ?";
 
 	public DatabaseHelper(string file) {
 		int rc;
@@ -80,6 +82,10 @@ public class DatabaseHelper {
 		if(rc != OK) {
 			error("could not prepare second stock statement!");
 		}
+		rc = this.db.prepare_v2(list_query, -1, out list_stmt);
+		if(rc != OK) {
+			error("could not prepare list statement!");
+		}
 
 	}
 	public bool user_exists(int32 id) {
@@ -125,10 +131,25 @@ public class DatabaseHelper {
 		name = null;
 
 		if(this.product_stmt.step() == ROW) {
-			name = this.imei_stmt.column_text(0);
+			name = this.product_stmt.column_text(0);
 			return true;
 		}
 		return false;
+	}
+	public List<Sale> sold_products(int64 from, int64 to) {
+		int rc;
+		List<Sale> sales = new List<Sale>();
+
+		this.list_stmt.reset();
+		this.list_stmt.bind_int64(1, from);
+		this.list_stmt.bind_int64(2, to);
+
+		while((rc = this.list_stmt.step()) == ROW) {
+			Sale s = new Sale(list_stmt.column_int(0), list_stmt.column_int64(1), list_stmt.column_int64(2));
+			get_product_name(s.article, out s.product_name);
+			sales.append((owned) s);
+		}
+		return sales;
 	}
 	public bool undo_last(int32 user) {
 		uint64 pid;
