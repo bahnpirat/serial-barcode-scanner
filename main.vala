@@ -1,5 +1,6 @@
 public Device dev;
-public Database db;
+public ScannerSession ss;
+public DatabaseHelper db;
 public Web web;
 
 public static int main(string[] args) {
@@ -9,8 +10,9 @@ public static int main(string[] args) {
 	}
 
 	dev = new Device(args[1], 9600, 8, 1);
-	db = new Database("shop.db");
-	web = new Web(8080);
+	db = new DatabaseHelper("shop.db");
+	ss = new ScannerSession(db);
+	web = new Web(8080, db);
 
 	dev.received_barcode.connect((data) => {
 		if(interpret(data))
@@ -34,45 +36,45 @@ public static bool interpret(string data) {
 			return false;
 		}
 
-		if(db.is_logged_in()) {
+		if(ss.is_logged_in()) {
 			stdout.printf("[%lld] Last User forgot to logout!\n", timestamp);
-			db.logout();
+			ss.logout();
 		}
 
 		stdout.printf("[%lld] Login: %d\n", timestamp, id);
-		return db.login(id);
+		return ss.login(id);
 	} else if(data == "GUEST") {
-		if(db.is_logged_in()) {
+		if(ss.is_logged_in()) {
 			stdout.printf("[%lld] Last User forgot to logout!\n", timestamp);
-			db.logout();
+			ss.logout();
 		}
 
 		stdout.printf("[%lld] Login: Guest\n", timestamp);
-		return db.login(0);
+		return ss.login(0);
 	} else if(data == "UNDO") {
-		if(!db.is_logged_in()) {
+		if(!ss.is_logged_in()) {
 			stdout.printf("[%lld] Can't undo if not logged in!\n", timestamp);
 			return false;
 		} else {
 			stdout.printf("[%lld] Undo last purchase!\n", timestamp);
-			return db.undo();
+			return ss.undo();
 		}
 	} else if(data == "LOGOUT") {
-		if(db.is_logged_in()) {
+		if(ss.is_logged_in()) {
 			stdout.printf("[%lld] Logout!\n", timestamp);
-			return db.logout();
+			return ss.logout();
 		}
 
 		return false;
 	} else if(data == "STOCK") {
-		if(!db.is_logged_in()) {
+		if(!ss.is_logged_in()) {
 			stdout.printf("[%lld] You must be logged in to go into the stock mode\n", timestamp);
 			return false;
 		} else {
 			stdout.printf("[%lld] Going into stock mode!\n", timestamp);
-			return db.go_into_stock_mode();
+			return ss.enter_stock_mode();
 		}
-	} else if(db.is_in_stock_mode()) {
+	} else if(ss.is_in_stock_mode()) {
 		if(!data.has_prefix("AMOUNT")) {
 			uint64 id = uint64.parse(data);
 
@@ -82,9 +84,9 @@ public static bool interpret(string data) {
 				return false;
 			}
 
-			stdout.printf("[%lld] wähle Produkt: %s\n", timestamp, db.get_product_name(id));
+			stdout.printf("[%lld] wähle Produkt: %s\n", timestamp, ss.get_product_name(id));
 
-			return db.choose_stock_product(id);
+			return ss.choose_stock_product(id);
 		} else {
 			uint64 amount = uint64.parse(data.substring(7));
 
@@ -96,7 +98,7 @@ public static bool interpret(string data) {
 
 			stdout.printf("[%lld] zum Bestand hinzufügen: %llu\n", timestamp, amount);
 
-			return db.add_stock_product(amount);
+			return ss.add_stock_product(amount);
 		}
 	} else {
 		uint64 id = uint64.parse(data);
@@ -107,8 +109,8 @@ public static bool interpret(string data) {
 			return false;
 		}
 
-		if(db.buy(id)) {
-			stdout.printf("[%lld] gekaufter Artikel: %s\n", timestamp, db.get_product_name(id));
+		if(ss.buy(id)) {
+			stdout.printf("[%lld] gekaufter Artikel: %s\n", timestamp, ss.get_product_name(id));
 			return true;
 		} else {
 			stdout.printf("[%lld] Kauf fehlgeschlagen!\n", timestamp);
