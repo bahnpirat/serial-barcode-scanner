@@ -26,8 +26,6 @@ public class Web {
 		stdout.printf("[%d] %s\n", ((string)msg.request_body.flatten().data).length, (string)msg.request_body.flatten().data);
 	}
 	void stats_handler(Server server, Message msg, string path, HashTable<string,string>? query, ClientContext client) {
-	}
-	void list_handler(Server server, Message msg, string path, HashTable<string,string>? query, ClientContext client) {
 		string[] parameters = path.split("/");
 		int64 from, to;
 		size_t len;
@@ -63,8 +61,56 @@ public class Web {
 			b.end_object();
 		}
 		b.end_array();
+
+		b.set_member_name("status");
+		b.add_boolean_value(true);
+
 		b.end_object();
 
+		g.root = b.get_root();
+		msg.set_response("application/json", Soup.MemoryUse.COPY, g.to_data(out len).data);
+	}
+	void list_handler(Server server, Message msg, string path, HashTable<string,string>? query, ClientContext client) {
+		string[] parameters = path.split("/");
+		int32 user, limit;
+		size_t len;
+		List<Sale> sales;
+		Builder b = new Builder();
+		Generator g = new Generator();
+
+		b.begin_object();
+		if(parameters.length > 2) {
+			user = (int32)int64.parse(parameters[2]);
+			if(parameters.length > 3)
+				limit = (int32)int64.parse(parameters[3]);
+			else
+				limit = 20;
+
+			sales = db.user_list(user, limit);
+
+			b.set_member_name("sales");
+			b.begin_array();
+			foreach(unowned Sale s in sales) {
+				b.begin_object();
+				b.set_member_name("article");
+				b.add_int_value(s.article);
+				b.set_member_name("product");
+				b.add_string_value(s.product_name);
+				b.set_member_name("timestamp");
+				b.add_int_value(s.timestamp);
+				b.end_object();
+			}
+			b.end_array();
+			b.set_member_name("status");
+			b.add_boolean_value(true);
+		}
+		else {
+			b.set_member_name("status");
+			b.add_boolean_value(false);
+			b.set_member_name("error");
+			b.add_string_value("missing user id parameter");
+		}
+		b.end_object();
 		g.root = b.get_root();
 		msg.set_response("application/json", Soup.MemoryUse.COPY, g.to_data(out len).data);
 	}

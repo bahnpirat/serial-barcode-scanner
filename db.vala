@@ -13,6 +13,7 @@ public class DatabaseHelper {
 	private Statement stock_stmt1;
 	private Statement stock_stmt2;
 	private Statement list_stmt;
+	private Statement user_list_stmt;
 	private static string user_query = "SELECT id FROM users WHERE id = ? LIMIT 1";
 	private static string imei_query = "SELECT id FROM users WHERE imei = ? LIMIT 1";
 	private static string product_query = "SELECT name FROM products WHERE id = ?";
@@ -24,6 +25,7 @@ public class DatabaseHelper {
 	private static string stock_query1 = "INSERT INTO restock ('user', 'product', 'amount', 'timestamp') VALUES (?, ?, ?, ?)";
 	private static string stock_query2 = "UPDATE products SET amount = amount + ? WHERE id = ?";
 	private static string list_query = "SELECT user, product, timestamp FROM purchases WHERE timestamp >= ? AND timestamp <= ?";
+	private static string user_list_query = "SELECT product, timestamp FROM purchases WHERE user = ? ORDER BY timestamp LIMIT ?";
 
 	public DatabaseHelper(string file) {
 		int rc;
@@ -82,9 +84,15 @@ public class DatabaseHelper {
 		if(rc != OK) {
 			error("could not prepare second stock statement!");
 		}
+
 		rc = this.db.prepare_v2(list_query, -1, out list_stmt);
 		if(rc != OK) {
 			error("could not prepare list statement!");
+		}
+
+		rc = this.db.prepare_v2(user_list_query, -1, out user_list_stmt);
+		if(rc != OK) {
+			error("could not prepare user list statement!");
 		}
 
 	}
@@ -145,7 +153,28 @@ public class DatabaseHelper {
 		this.list_stmt.bind_int64(2, to);
 
 		while((rc = this.list_stmt.step()) == ROW) {
-			Sale s = new Sale(list_stmt.column_int(0), list_stmt.column_int64(1), list_stmt.column_int64(2));
+			Sale s = new Sale();
+			s.user = list_stmt.column_int(0);
+			s.article = list_stmt.column_int64(1);
+			s.timestamp = list_stmt.column_int64(2);
+			get_product_name(s.article, out s.product_name);
+			sales.append((owned) s);
+		}
+		return sales;
+	}
+	public List<Sale> user_list(int32 user, int32 limit) {
+		int rc;
+		List<Sale> sales = new List<Sale>();
+
+		this.user_list_stmt.reset();
+		this.user_list_stmt.bind_int64(1, user);
+		this.user_list_stmt.bind_int64(2, limit);
+
+		while((rc = this.user_list_stmt.step()) == ROW) {
+			Sale s = new Sale();
+			s.user = user;
+			s.article = user_list_stmt.column_int64(0);
+			s.timestamp = user_list_stmt.column_int64(1);
 			get_product_name(s.article, out s.product_name);
 			sales.append((owned) s);
 		}
