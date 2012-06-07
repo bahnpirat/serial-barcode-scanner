@@ -91,10 +91,10 @@ public class DatabaseHelper {
 	public bool imei_exists(string imei, out int id) {
 		this.imei_stmt.reset();
 		this.imei_stmt.bind_text(1, imei);
+		id = 0;
 
 		if(this.imei_stmt.step() == ROW) {
-			if(id != 0)
-				id = this.imei_stmt.column_int(0);
+			id = this.imei_stmt.column_int(0);
 			return true;
 		}
 		return false;
@@ -122,10 +122,10 @@ public class DatabaseHelper {
 	public bool get_product_name(uint64 article, out string name) {
 		this.product_stmt.reset();
 		this.product_stmt.bind_int64(1, (int64)article);
+		name = null;
 
 		if(this.product_stmt.step() == ROW) {
-			if(name != null)
-				name = this.imei_stmt.column_text(0);
+			name = this.imei_stmt.column_text(0);
 			return true;
 		}
 		return false;
