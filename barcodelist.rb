@@ -11,6 +11,7 @@ require "csv"
 	\usepackage{graphicx}
 	\usepackage{longtable}
 	\usepackage{array}
+	\usepackage{rotating}
 	\usepackage[top=0.5cm,right=0.5cm,bottom=0.5cm,left=0.5cm,landscape]{geometry}
 	\renewcommand{\familydefault}{\sfdefault}
 	\renewcommand{\arraystretch}{2}
@@ -35,6 +36,7 @@ require "csv"
 
 @graphics = %q{ \includegraphics{%s} \rule{0cm}{3.5cm} %s}
 @name = %q{ %s %s %s}
+@ktt = %q{\includegraphics[width=8cm,angle=180]{ktt}  %s }
 
 @csv = CSV.read(ARGV[0])
 
@@ -54,6 +56,14 @@ name = ""
 	name += @name % [@csv[i-1][1], @csv[i-1][2], sign]
 	if le 
 		tmp += @line % [graphics, name] 
+		graphics = ""
+		name = ""
+		1.upto(3) {|j|
+			sign = j == 3 ? "\\\\" : "&"
+			graphics += @ktt % sign
+			name += " " + sign
+		}
+		tmp += @line % [name, graphics]
 		graphics = ""
 		name = ""
 	end
