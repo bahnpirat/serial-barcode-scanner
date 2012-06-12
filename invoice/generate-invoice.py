@@ -111,6 +111,8 @@ def generate_invoice_tex(user, title, subject, start=0, stop=0, temporary=False)
 	for row in get_invoice_data(user, start, stop):
 		total += row["price"]
 
+		row["product"] = row["product"].replace("&", "\\&")
+
 		if lastdate != row["date"]:
 			result += "\t\t\t\t%s\t& %s\t& %s\t& \\EUR{%d,%02d}\\\\\n" % (row["date"], row["time"], row["product"], row["price"] / 100, row["price"] % 100)
 			lastdate = row["date"]
@@ -292,7 +294,7 @@ def monthly(timestamp = time.time()):
 			msg  = generate_invoice_text(user, title, subject, start, stop, False)
 			pdf  = generate_pdf(tex)
 			mail = generate_mail(receiver, title, msg, pdf, timestamp, cc = "schatzmeister@kreativitaet-trifft-technik.de")
-			send_mail(mail, [userinfo["email"], "schatzmeister@kreativitaet-trifft-oldenburg.de"])
+			send_mail(mail, [userinfo["email"], "schatzmeister@kreativitaet-trifft-technik.de"])
 			print("Sent invoice to", userinfo["firstname"], userinfo["lastname"])
 		else:
 			print("Can't send invoice for missing user with the following id:", user)
