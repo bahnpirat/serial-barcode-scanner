@@ -10,14 +10,17 @@ require "csv"
 	\usepackage[utf8]{inputenc}
 	\usepackage{graphicx}
 	\usepackage{longtable}
+	\usepackage{array}
 	\usepackage[top=0.5cm,right=0.5cm,bottom=0.5cm,left=0.5cm,landscape]{geometry}
 	\renewcommand{\familydefault}{\sfdefault}
+	\renewcommand{\arraystretch}{2}
+	\renewcommand{\tabcolsep}{0cm}
 	\title{Barcodelist}
 	\author{Kreativitaet trifft Technik}
 	\date{\today}
 	\begin{document}
 		\begin{center}
-		\begin{longtable}{|c|c|c|}
+		\begin{longtable}{| >{\centering\arraybackslash}p{8.5cm}| >{\centering\arraybackslash}p{8.5cm}| >{\centering\arraybackslash}p{8.5cm}|}
 			%s	
 		\end{longtable}
 	\end{center}
@@ -30,7 +33,7 @@ require "csv"
 	%s
 	\hline}
 
-@graphics = %q{ \includegraphics{%s} %s}
+@graphics = %q{ \includegraphics{%s} \rule{0cm}{3.5cm} %s}
 @name = %q{ %s %s %s}
 
 @csv = CSV.read(ARGV[0])
